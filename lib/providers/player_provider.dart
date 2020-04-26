@@ -4,51 +4,82 @@ import 'package:flutter_audio_query/flutter_audio_query.dart';
 
 class PlayerProvider extends ChangeNotifier {
   AudioPlayer player;
+  List<SongInfo> songs;
   SongInfo selectedSong;
   Stream<Duration> durationStream;
   Stream<Duration> positionStream;
-  Stream<AudioPlayerState> stateStream;
   Duration currentPosition;
   Duration currentDuration;
+  AudioPlayerState currentState;
 
   PlayerProvider() {
     this.player = AudioPlayer();
-    this.currentPosition = Duration(milliseconds: 100);
-    this.currentDuration = Duration(milliseconds: 100);
+    this.currentPosition = Duration(milliseconds: 1);
+    this.currentDuration = Duration(milliseconds: 29000);
     this.setupStreams();
+  }
+
+  void update(List<SongInfo> songs) {
+    this.songs = songs;
+    notifyListeners();
   }
 
   void open(SongInfo selectedSong) {
     this.selectedSong = selectedSong;
     this.play(selectedSong.filePath);
-    notifyListeners();
   }
 
   Future<void> play(String filePath) async {
     await this.player.play(filePath, isLocal: true);
+    this.setCurrentState(AudioPlayerState.PLAYING);
     this.setupStreams();
+    notifyListeners();
   }
 
   void resume() {
     this.player.resume();
+    this.setCurrentState(AudioPlayerState.PLAYING);
     notifyListeners();
   }
 
   void pause() {
     this.player.pause();
+    this.setCurrentState(AudioPlayerState.PAUSED);
     notifyListeners();
   }
 
   void stop() {
     this.player.stop();
+    this.setCurrentState(AudioPlayerState.STOPPED);
     this.clear();
+    notifyListeners();
+  }
+
+  void next() {
+    int currentIndex = this.songs.indexOf(this.selectedSong);
+    int nextIndex = currentIndex + 1;
+    SongInfo nextSong = this.songs[nextIndex];
+    this.play(nextSong.filePath);
+  }
+
+  bool hasNext() {
+    return this.selectedSong != this.songs.last;
+  }
+
+  void previous() {
+    int currentIndex = this.songs.indexOf(this.selectedSong);
+    int previousIndex = currentIndex - 1;
+    SongInfo previousSong = this.songs[previousIndex];
+    this.play(previousSong.filePath);
+  }
+
+  bool hasPrevious() {
+    return this.selectedSong != this.songs.first;
   }
 
   void setupStreams() {
     this.durationStream = this.player.onDurationChanged;
     this.positionStream = this.player.onAudioPositionChanged;
-    this.stateStream = this.player.onPlayerStateChanged;
-    notifyListeners();
   }
 
   void setCurrentPosition(Duration currentPosition) {
@@ -59,10 +90,13 @@ class PlayerProvider extends ChangeNotifier {
     this.currentDuration = currentDuration;
   }
 
+  void setCurrentState(AudioPlayerState currentState) {
+    this.currentState = currentState;
+  }
+
   void clear() {
     this.selectedSong = null;
-    this.currentPosition = Duration(milliseconds: 100);
-    this.currentDuration = Duration(milliseconds: 100);
-    notifyListeners();
+    this.currentPosition = Duration(milliseconds: 1);
+    this.currentDuration = Duration(milliseconds: 29000);
   }
 }

@@ -4,14 +4,14 @@ import 'package:humbl/helpers/palette.dart';
 import 'package:humbl/keys/root_key.dart';
 import 'package:humbl/providers/navigation_provider.dart';
 import 'package:humbl/providers/player_provider.dart';
-import 'package:humbl/screens/home/home_screen.dart';
+import 'package:humbl/screens/music/music_screen.dart';
 import 'package:humbl/screens/profile/profile_screen.dart';
 import 'package:humbl/screens/search/search_screen.dart';
 import 'package:provider/provider.dart';
 
 class Index extends StatelessWidget {
   final List<Screen> screens = [
-    Screen(HomeScreen(), Icons.music_note, "Home"),
+    Screen(MusicScreen(), Icons.music_note, "Music"),
     Screen(SearchScreen(), Icons.search, "Search"),
     Screen(ProfileScreen(), Icons.person, "Profile"),
   ];
@@ -43,9 +43,9 @@ class Index extends StatelessWidget {
             onResume: this.playerProvider.resume,
             duration: this.playerProvider.durationStream,
             position: this.playerProvider.positionStream,
-            state: this.playerProvider.stateStream,
             currentPosition: this.playerProvider.currentPosition,
             currentDuration: this.playerProvider.currentDuration,
+            currentState: this.playerProvider.currentState,
             onPositionChanged: this.playerProvider.setCurrentPosition,
             onDurationChanged: this.playerProvider.setCurrentDuration,
           )

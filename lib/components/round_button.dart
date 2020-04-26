@@ -26,7 +26,7 @@ class RoundButton extends StatelessWidget {
           padding: const EdgeInsets.all(10.0),
           child: Icon(
             this.icon,
-            color: Colors.black87,
+            color: this.onPressed != null ? Colors.black87 : Colors.grey,
           ),
         ),
         onPressed: this.onPressed,

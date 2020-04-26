@@ -5,7 +5,7 @@ import 'package:humbl/providers/music_provider.dart';
 import 'package:humbl/providers/player_provider.dart';
 import 'package:provider/provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class MusicScreen extends StatelessWidget {
   final MusicProvider musicProvider = Provider.of<MusicProvider>(rootKey.currentContext);
   final PlayerProvider playerProvider = Provider.of<PlayerProvider>(rootKey.currentContext);
 
@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Home"),
+        title: Text("Music"),
       ),
       body: ListView.separated(
         itemCount: this.musicProvider.songs?.length ?? 0,

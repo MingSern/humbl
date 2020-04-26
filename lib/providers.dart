@@ -14,7 +14,8 @@ final providers = [
   ChangeNotifierProvider<MusicProvider>(
     create: (_) => MusicProvider(),
   ),
-  ChangeNotifierProvider<PlayerProvider>(
+  ChangeNotifierProxyProvider<MusicProvider, PlayerProvider>(
     create: (_) => PlayerProvider(),
+    update: (_, music, player) => player..update(music.songs),
   ),
 ];
