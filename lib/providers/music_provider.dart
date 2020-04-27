@@ -14,10 +14,11 @@ class MusicProvider extends ChangeNotifier {
     try {
       this.songs = await this.audioQuery.getSongs();
       this.songs = this.songs.where((song) {
+        bool isMp3 = song.isMusic;
         bool moreThanOneMinute = int.parse(song.duration) >= 60000;
-        bool isASong = !song.title.startsWith("AUD") && !song.title.startsWith("Voice");
+        bool isSong = !song.title.startsWith("AUD") && !song.title.startsWith("Voice");
 
-        return moreThanOneMinute && isASong;
+        return moreThanOneMinute && isSong && isMp3;
       }).toList();
     } catch (e) {
       print(e.toString());

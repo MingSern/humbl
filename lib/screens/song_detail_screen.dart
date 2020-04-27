@@ -10,22 +10,6 @@ import 'package:provider/provider.dart';
 class SongDetailScreen extends StatelessWidget {
   final PlayerProvider playerProvider = Provider.of<PlayerProvider>(rootKey.currentContext);
 
-  void next() {
-    if (this.playerProvider.hasNext()) {
-      return this.playerProvider.next();
-    }
-
-    return null;
-  }
-
-  void previous() {
-    if (this.playerProvider.hasPrevious()) {
-      return this.playerProvider.previous();
-    }
-
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,8 +48,6 @@ class SongDetailScreen extends StatelessWidget {
 
                     if (duration != 1 && position != 1) {
                       value = 1000 * (position / duration);
-                      this.playerProvider.setCurrentDuration(durationSnapshot.data);
-                      this.playerProvider.setCurrentPosition(positionSnapshot.data);
                     }
 
                     return Column(
@@ -74,8 +56,9 @@ class SongDetailScreen extends StatelessWidget {
                           value: value,
                           min: 0.0,
                           max: 1000.0,
-                          onChanged: null,
+                          onChanged: this.playerProvider.onSeek,
                           label: Formatter.getTime(this.playerProvider.currentPosition),
+                          onChangeEnd: (_) => this.playerProvider.onSeekEnd(),
                         ),
                         Row(
                           mainAxisSize: MainAxisSize.max,
@@ -104,7 +87,8 @@ class SongDetailScreen extends StatelessWidget {
                           children: <Widget>[
                             RoundButton(
                               icon: Icons.skip_previous,
-                              onPressed: this.previous,
+                              onPressed:
+                                  this.playerProvider.hasPrevious() ? this.playerProvider.previous : null,
                             ),
                             SizedBox(
                               width: 10,
@@ -123,7 +107,7 @@ class SongDetailScreen extends StatelessWidget {
                             ),
                             RoundButton(
                               icon: Icons.skip_next,
-                              onPressed: this.next,
+                              onPressed: this.playerProvider.hasNext() ? this.playerProvider.next : null,
                             ),
                           ],
                         ),
