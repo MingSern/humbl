@@ -99,16 +99,9 @@ class PlayerProvider extends ChangeNotifier {
     return this.selectedSong != this.songs.first;
   }
 
-  void onSeek(double value) {
-    Duration position = Duration(
-      milliseconds: ((value / 1000) * this.currentDuration.inMilliseconds).round(),
-    );
+  void onSeek(double value) async {
+    Duration position = Duration(milliseconds: value.toInt());
     this.setCurrentPosition(position);
-    // notifyListeners();
-  }
-
-  void onSeekEnd() async {
     await this.player.seek(this.currentPosition);
-    // notifyListeners();
   }
 }

@@ -7,8 +7,34 @@ import 'package:humbl/keys/root_key.dart';
 import 'package:humbl/providers/player_provider.dart';
 import 'package:provider/provider.dart';
 
-class SongDetailScreen extends StatelessWidget {
+class SongDetailScreen extends StatefulWidget {
+  @override
+  _SongDetailScreenState createState() => _SongDetailScreenState();
+}
+
+class _SongDetailScreenState extends State<SongDetailScreen> {
   final PlayerProvider playerProvider = Provider.of<PlayerProvider>(rootKey.currentContext);
+  double sliderValue;
+  bool isChanging;
+
+  @override
+  void initState() {
+    this.sliderValue = this.playerProvider.currentPosition.inMilliseconds.toDouble();
+    this.isChanging = false;
+    super.initState();
+  }
+
+  void sliderOnChanged(double value) {
+    setState(() {
+      this.isChanging = true;
+      this.sliderValue = value;
+    });
+  }
+
+  void sliderChangeEnd(double value) {
+    this.playerProvider.onSeek(value);
+    setState(() => this.isChanging = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,88 +61,80 @@ class SongDetailScreen extends StatelessWidget {
               subtitle: Text(this.playerProvider.selectedSong.artist ?? ""),
             ),
             StreamBuilder(
-              stream: this.playerProvider.durationStream,
-              builder: (context, durationSnapshot) {
-                return StreamBuilder(
-                  stream: this.playerProvider.positionStream,
-                  builder: (context, positionSnapshot) {
-                    int duration = durationSnapshot?.data?.inMilliseconds ?? 1;
-                    int position = positionSnapshot?.data?.inMilliseconds ?? 1;
-                    double value = 1000 *
-                        (this.playerProvider.currentPosition.inMilliseconds /
-                            this.playerProvider.currentDuration.inMilliseconds);
-
-                    if (duration != 1 && position != 1) {
-                      value = 1000 * (position / duration);
-                    }
-
-                    return Column(
+              stream: this.playerProvider.positionStream,
+              builder: (context, positionSnapshot) {
+                return Column(
+                  children: <Widget>[
+                    Slider(
+                      value: this.isChanging
+                          ? this.sliderValue
+                          : this.playerProvider.currentPosition.inMilliseconds.toDouble(),
+                      min: 0.0,
+                      max: this.playerProvider.currentDuration.inMilliseconds.toDouble(),
+                      divisions: this.playerProvider.currentDuration.inSeconds,
+                      label: Formatter.getTimeFromDouble(
+                        this.sliderValue,
+                        this.playerProvider.currentDuration,
+                      ),
+                      onChanged: this.sliderOnChanged,
+                      onChangeEnd: this.sliderChangeEnd,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Slider(
-                          value: value,
-                          min: 0.0,
-                          max: 1000.0,
-                          onChanged: this.playerProvider.onSeek,
-                          label: Formatter.getTime(this.playerProvider.currentPosition),
-                          onChangeEnd: (_) => this.playerProvider.onSeekEnd(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Text(
+                            Formatter.getTime(this.playerProvider.currentPosition),
+                          ),
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Text(
-                                Formatter.getTime(this.playerProvider.currentPosition),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: Text(
-                                Formatter.getTime(this.playerProvider.currentDuration),
-                              ),
-                            )
-                          ],
-                        ),
-                        SizedBox(
-                          height: 5,
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            RoundButton(
-                              icon: Icons.skip_previous,
-                              onPressed:
-                                  this.playerProvider.hasPrevious() ? this.playerProvider.previous : null,
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            this.playerProvider.currentState == AudioPlayerState.PAUSED
-                                ? IconButton(
-                                    icon: Icon(Icons.play_arrow),
-                                    onPressed: this.playerProvider.resume,
-                                  )
-                                : IconButton(
-                                    icon: Icon(Icons.pause),
-                                    onPressed: this.playerProvider.pause,
-                                  ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            RoundButton(
-                              icon: Icons.skip_next,
-                              onPressed: this.playerProvider.hasNext() ? this.playerProvider.next : null,
-                            ),
-                          ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Text(
+                            Formatter.getTime(this.playerProvider.currentDuration),
+                          ),
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        RoundButton(
+                          icon: Icons.skip_previous,
+                          onPressed: this.playerProvider.hasPrevious() ? this.playerProvider.previous : null,
                         ),
                         SizedBox(
-                          height: 20,
+                          width: 10,
+                        ),
+                        this.playerProvider.currentState == AudioPlayerState.PAUSED
+                            ? IconButton(
+                                iconSize: 40,
+                                icon: Icon(Icons.play_arrow),
+                                onPressed: this.playerProvider.resume,
+                              )
+                            : IconButton(
+                                iconSize: 40,
+                                icon: Icon(Icons.pause),
+                                onPressed: this.playerProvider.pause,
+                              ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        RoundButton(
+                          icon: Icons.skip_next,
+                          onPressed: this.playerProvider.hasNext() ? this.playerProvider.next : null,
                         ),
                       ],
-                    );
-                  },
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                  ],
                 );
               },
             ),

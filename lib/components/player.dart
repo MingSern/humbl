@@ -1,49 +1,28 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_query/flutter_audio_query.dart';
 import 'package:humbl/components/round_button.dart';
 import 'package:humbl/helpers/palette.dart';
+import 'package:humbl/providers/player_provider.dart';
 
 class Player extends StatelessWidget {
-  final Function onDismissed;
-  final VoidCallback onResume;
-  final VoidCallback onPause;
-  final SongInfo selectedSong;
-  final Stream<Duration> duration;
-  final Stream<Duration> position;
-  final Duration currentDuration;
-  final Duration currentPosition;
-  final AudioPlayerState currentState;
-  final Function onDurationChanged;
-  final Function onPositionChanged;
+  final PlayerProvider provider;
   final GestureTapCallback onTap;
   final double height = 60;
 
   Player({
-    @required this.onDismissed,
-    @required this.onResume,
-    @required this.onPause,
-    @required this.selectedSong,
-    @required this.duration,
-    @required this.position,
-    @required this.currentDuration,
-    @required this.currentPosition,
-    @required this.currentState,
-    @required this.onDurationChanged,
-    @required this.onPositionChanged,
+    @required this.provider,
     @required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return this.currentState == AudioPlayerState.STOPPED || this.selectedSong == null
+    return this.provider.currentState == AudioPlayerState.STOPPED || this.provider.selectedSong == null
         ? Container()
         : Dismissible(
             key: UniqueKey(),
             direction: DismissDirection.down,
-            onDismissed: (_) => this.onDismissed(),
+            onDismissed: (_) => this.provider.stop(),
             child: GestureDetector(
               onTap: this.onTap,
               child: Container(
@@ -73,34 +52,36 @@ class Player extends StatelessWidget {
                             bottomLeft: Radius.circular(10),
                           ),
                         ),
-                        child: this.selectedSong?.albumArtwork != null
+                        child: this.provider.selectedSong?.albumArtwork != null
                             ? Image.file(
-                                File(this.selectedSong.albumArtwork),
+                                File(this.provider.selectedSong.albumArtwork),
                                 fit: BoxFit.contain,
                               )
                             : Icon(Icons.music_note),
                       ),
                       StreamBuilder(
-                        stream: this.duration,
+                        stream: this.provider.durationStream,
                         builder: (context, durationSnapshot) {
                           return StreamBuilder(
-                            stream: this.position,
+                            stream: this.provider.positionStream,
                             builder: (context, positionSnapshot) {
+                              Duration currentDuration = this.provider.currentDuration;
+                              Duration currentPosition = this.provider.currentPosition;
                               int duration = durationSnapshot?.data?.inMilliseconds ?? 1;
                               int position = positionSnapshot?.data?.inMilliseconds ?? 1;
-                              double width = 290 *
-                                  (this.currentPosition.inMilliseconds / this.currentDuration.inMilliseconds);
+                              double width =
+                                  290 * (currentPosition.inMilliseconds / currentDuration.inMilliseconds);
 
                               if (duration != 1 && position != 1) {
                                 width = 290 * (position / duration);
-                                this.onDurationChanged(durationSnapshot.data);
-                                this.onPositionChanged(positionSnapshot.data);
+                                this.provider.setCurrentDuration(durationSnapshot.data);
+                                this.provider.setCurrentPosition(positionSnapshot.data);
                               }
 
                               return Stack(
                                 children: <Widget>[
                                   AnimatedContainer(
-                                    color: Palette.blue.withOpacity(0.2),
+                                    color: Palette.tomato.withOpacity(0.2),
                                     height: this.height,
                                     width: width,
                                     duration: Duration(milliseconds: 150),
@@ -113,21 +94,21 @@ class Player extends StatelessWidget {
                                         width: 230,
                                         padding: const EdgeInsets.symmetric(horizontal: 10),
                                         child: Text(
-                                          this.selectedSong?.title ?? "Opps",
+                                          this.provider.selectedSong?.title ?? "Ops!",
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                       Container(
                                         height: this.height,
                                         width: this.height,
-                                        child: this.currentState == AudioPlayerState.PLAYING
+                                        child: this.provider.currentState == AudioPlayerState.PLAYING
                                             ? RoundButton(
                                                 icon: Icons.pause,
-                                                onPressed: this.onPause,
+                                                onPressed: this.provider.pause,
                                               )
                                             : RoundButton(
                                                 icon: Icons.play_arrow,
-                                                onPressed: this.onResume,
+                                                onPressed: this.provider.resume,
                                               ),
                                       )
                                     ],

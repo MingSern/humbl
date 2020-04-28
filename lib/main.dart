@@ -27,7 +27,7 @@ class ProvidersInjectedApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       key: rootKey,
       title: "humbl",
-      color: Palette.blue,
+      color: Palette.sesame,
       theme: themeProvider.themeData,
       initialRoute: "/index",
       routes: routes,
