@@ -45,8 +45,8 @@ class MusicScreen extends StatelessWidget {
         },
         separatorBuilder: (context, index) {
           return Divider(
-            indent: 10,
-            endIndent: 10,
+            indent: 20,
+            endIndent: 20,
             height: 1,
           );
         },

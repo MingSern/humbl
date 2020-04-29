@@ -22,13 +22,8 @@ class ThemeProvider extends ChangeNotifier {
       cursorColor: Palette.sesame,
       canvasColor: Colors.white,
       scaffoldBackgroundColor: Colors.white,
-      primaryColor: Palette.sesame,
+      primaryColor: Palette.tomato,
       primaryTextTheme: TextTheme(
-        title: TextStyle(
-          color: Palette.sesame,
-        ),
-      ),
-      accentTextTheme: TextTheme(
         title: TextStyle(
           color: Palette.sesame,
         ),
