@@ -3,22 +3,17 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:humbl/components/round_button.dart';
 import 'package:humbl/helpers/palette.dart';
+import 'package:humbl/keys/root_key.dart';
 import 'package:humbl/providers/player_provider.dart';
+import 'package:provider/provider.dart';
 
 class Player extends StatefulWidget {
-  final PlayerProvider provider;
-  final GestureTapCallback onTap;
-
-  Player({
-    @required this.provider,
-    @required this.onTap,
-  });
-
   @override
   _PlayerState createState() => _PlayerState();
 }
 
 class _PlayerState extends State<Player> {
+  final PlayerProvider playerProvider = Provider.of<PlayerProvider>(rootKey.currentContext);
   final double height = 60;
   double offset;
 
@@ -29,26 +24,31 @@ class _PlayerState extends State<Player> {
   }
 
   Future<void> onDrag(DragEndDetails drag) async {
-    if (drag.primaryVelocity < 0 && this.widget.provider.hasNext()) {
+    if (drag.primaryVelocity < 0 && this.playerProvider.hasNext()) {
       setState(() => this.offset = 1);
-      this.widget.provider.next(isSliding: true);
-    } else if (drag.primaryVelocity > 0 && this.widget.provider.hasPrevious()) {
+      this.playerProvider.next(isSliding: true);
+    } else if (drag.primaryVelocity > 0 && this.playerProvider.hasPrevious()) {
       setState(() => this.offset = -1);
-      this.widget.provider.previous(isSliding: true);
+      this.playerProvider.previous(isSliding: true);
     }
+  }
+
+  void viewSongDetail(BuildContext context) {
+    this.playerProvider.setIsSliding(false);
+    Navigator.pushNamed(context, "/songDetail");
   }
 
   @override
   Widget build(BuildContext context) {
-    return this.widget.provider.currentState == AudioPlayerState.STOPPED ||
-            this.widget.provider.selectedSong == null
+    return this.playerProvider.currentState == AudioPlayerState.STOPPED ||
+            this.playerProvider.selectedSong == null
         ? Container()
         : Dismissible(
             key: UniqueKey(),
             direction: DismissDirection.down,
-            onDismissed: (_) => this.widget.provider.stop(),
+            onDismissed: (_) => this.playerProvider.stop(),
             child: GestureDetector(
-              onTap: this.widget.onTap,
+              onTap: () => this.viewSongDetail(context),
               onHorizontalDragEnd: this.onDrag,
               child: Container(
                 margin: const EdgeInsets.all(5),
@@ -77,21 +77,21 @@ class _PlayerState extends State<Player> {
                             bottomLeft: Radius.circular(10),
                           ),
                         ),
-                        child: this.widget.provider.selectedSong?.albumArtwork != null
+                        child: this.playerProvider.selectedSong?.albumArtwork != null
                             ? Image.file(
-                                File(this.widget.provider.selectedSong.albumArtwork),
+                                File(this.playerProvider.selectedSong.albumArtwork),
                                 fit: BoxFit.contain,
                               )
                             : Icon(Icons.music_note),
                       ),
                       StreamBuilder(
-                        stream: this.widget.provider.durationStream,
+                        stream: this.playerProvider.durationStream,
                         builder: (context, durationSnapshot) {
                           return StreamBuilder(
-                            stream: this.widget.provider.positionStream,
+                            stream: this.playerProvider.positionStream,
                             builder: (context, positionSnapshot) {
-                              Duration currentDuration = this.widget.provider.currentDuration;
-                              Duration currentPosition = this.widget.provider.currentPosition;
+                              Duration currentDuration = this.playerProvider.currentDuration;
+                              Duration currentPosition = this.playerProvider.currentPosition;
                               int duration = durationSnapshot?.data?.inMilliseconds ?? 1;
                               int position = positionSnapshot?.data?.inMilliseconds ?? 1;
                               double width =
@@ -99,11 +99,11 @@ class _PlayerState extends State<Player> {
 
                               if (duration != 1 && position != 1) {
                                 width = 290 * (position / duration);
-                                this.widget.provider.setCurrentDuration(durationSnapshot.data);
-                                this.widget.provider.setCurrentPosition(positionSnapshot.data);
+                                this.playerProvider.setCurrentDuration(durationSnapshot.data);
+                                this.playerProvider.setCurrentPosition(positionSnapshot.data);
                               }
 
-                              AudioPlayerState state = this.widget.provider.currentState;
+                              AudioPlayerState state = this.playerProvider.currentState;
 
                               return Stack(
                                 children: <Widget>[
@@ -117,12 +117,12 @@ class _PlayerState extends State<Player> {
                                     mainAxisSize: MainAxisSize.max,
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      !this.widget.provider.isSliding
+                                      !this.playerProvider.isSliding
                                           ? Container(
                                               width: 230,
                                               padding: const EdgeInsets.symmetric(horizontal: 10),
                                               child: Text(
-                                                this.widget.provider.selectedSong.title,
+                                                this.playerProvider.selectedSong.title,
                                                 overflow: TextOverflow.ellipsis,
                                                 textAlign: TextAlign.center,
                                               ),
@@ -130,8 +130,7 @@ class _PlayerState extends State<Player> {
                                           : ClipRRect(
                                               child: AnimatedSwitcher(
                                                 duration: Duration(milliseconds: 300),
-                                                transitionBuilder:
-                                                    (Widget child, Animation<double> animation) {
+                                                transitionBuilder: (child, animation) {
                                                   final inAnimation = Tween<Offset>(
                                                     begin: Offset(this.offset, 0),
                                                     end: Offset(0, 0),
@@ -156,8 +155,8 @@ class _PlayerState extends State<Player> {
                                                   padding: const EdgeInsets.symmetric(horizontal: 10),
                                                   child: Text(
                                                     positionSnapshot.hasData
-                                                        ? this.widget.provider.selectedSong.title
-                                                        : this.widget.provider.prevSelectedSong.title,
+                                                        ? this.playerProvider.selectedSong.title
+                                                        : this.playerProvider.prevSelectedSong.title,
                                                     overflow: TextOverflow.ellipsis,
                                                     textAlign: TextAlign.center,
                                                   ),
@@ -170,11 +169,11 @@ class _PlayerState extends State<Player> {
                                         child: state == AudioPlayerState.PLAYING
                                             ? RoundButton(
                                                 icon: Icons.pause,
-                                                onPressed: this.widget.provider.pause,
+                                                onPressed: this.playerProvider.pause,
                                               )
                                             : RoundButton(
                                                 icon: Icons.play_arrow,
-                                                onPressed: this.widget.provider.resume,
+                                                onPressed: this.playerProvider.resume,
                                               ),
                                       )
                                     ],

@@ -30,15 +30,15 @@ class PlayerProvider extends ChangeNotifier {
   void setupStreams() {
     this.durationStream = this.player.onDurationChanged;
     this.positionStream = this.player.onAudioPositionChanged;
+    this.player.onPlayerStateChanged.listen((AudioPlayerState state) {
+      if (state == AudioPlayerState.COMPLETED) {
+        this.next();
+      }
+    });
   }
 
   void setCurrentPosition(Duration currentPosition) {
     this.currentPosition = currentPosition;
-
-    if (this.currentPosition.inSeconds >= this.currentDuration.inSeconds) {
-      this.setCurrentState(AudioPlayerState.PAUSED);
-      this.next();
-    }
   }
 
   void setCurrentDuration(Duration currentDuration) {

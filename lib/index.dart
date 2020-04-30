@@ -16,12 +16,8 @@ class Index extends StatelessWidget {
     Screen(ProfileScreen(), Icons.person, "Profile"),
   ];
 
-  final NavigationProvider navigationProvider = Provider.of<NavigationProvider>(rootKey.currentContext);
-  final PlayerProvider playerProvider = Provider.of<PlayerProvider>(rootKey.currentContext);
-
-  void viewSongDetail(BuildContext context) {
-    Navigator.pushNamed(context, "/songDetail");
-  }
+  final NavigationProvider navigationProvider =
+      Provider.of<NavigationProvider>(rootKey.currentContext, listen: false);
 
   @override
   Widget build(BuildContext context) {
@@ -29,30 +25,37 @@ class Index extends StatelessWidget {
       body: Stack(
         alignment: AlignmentDirectional.bottomCenter,
         children: <Widget>[
-          IndexedStack(
-            index: this.navigationProvider.index,
-            children: this.screens.map((screen) {
-              return screen.widget;
-            }).toList(),
+          Selector<NavigationProvider, int>(
+            selector: (context, navigation) => navigation.index,
+            builder: (context, index, child) {
+              return IndexedStack(
+                index: index,
+                children: this.screens.map((screen) {
+                  return screen.widget;
+                }).toList(),
+              );
+            },
           ),
-          Player(
-            provider: this.playerProvider,
-            onTap: () => this.viewSongDetail(context),
-          )
+          Player(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Palette.sesame,
-        unselectedItemColor: Colors.grey,
-        currentIndex: this.navigationProvider.index,
-        onTap: this.navigationProvider.setIndex,
-        items: this.screens.map((screen) {
-          return BottomNavigationBarItem(
-            icon: Icon(screen.iconData),
-            title: Text(screen.title),
+      bottomNavigationBar: Selector<NavigationProvider, int>(
+        selector: (context, navigation) => navigation.index,
+        builder: (context, index, child) {
+          return BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            selectedItemColor: Palette.sesame,
+            unselectedItemColor: Colors.grey,
+            currentIndex: index,
+            onTap: this.navigationProvider.setIndex,
+            items: this.screens.map((screen) {
+              return BottomNavigationBarItem(
+                icon: Icon(screen.iconData),
+                title: Text(screen.title),
+              );
+            }).toList(),
           );
-        }).toList(),
+        },
       ),
     );
   }
